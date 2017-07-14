@@ -30,8 +30,8 @@ A = np.array([(1.997992008668995, -0.998001998667333), (1, 0)])
 B = np.array([0.0625, 0])
 C = np.array([(0.015991978684004, -0.015975994686662)])
 D = np.array([0])
-u = 1
-x = np.array([0, 0])
+u = 0
+x = np.array([6300.0, 6300.0])
 x_trajectory_sim = np.zeros((2, n_sim))
 y_trajectory_sim = np.zeros((1, n_sim))
 t_array_sim = np.linspace(start_time, start_time + duration, n_sim)
@@ -41,8 +41,8 @@ y_trajectory_sample = np.zeros(int(n_sampling))
 k = 0
 
 
-for i in range(0, 10):
-    sock.sendto("Sample Frequency: " + str(sampling_frequency), (UDP_IP, UDP_PORT))
+for i in range(0, 3):
+    sock.sendto("Sample Frequency 2: " + str(sampling_frequency), (UDP_IP, UDP_PORT))
     time.sleep(0.05)
 i = 0
 t_0 = time.time()
@@ -81,7 +81,7 @@ while True:
                 
         i = i + 1
 
-for i in range(0, 10):
+for i in range(0, 3):
     sock.sendto("Terminate", (UDP_IP, UDP_PORT))
     time.sleep(0.05)
 
