@@ -7,7 +7,7 @@ import time
 
 
 def drill_simulation():
-    global drill_status, hole_counter, Xdrill, Ydrill, D, W
+    global drill_status, hole_counter, Xdrill, Ydrill, D, W, pause_status
     movement_case = 0  # 0 for simulated movement, 1 for controlled movement
     # ======
     Ndrills = 1
@@ -111,21 +111,22 @@ def drill_simulation():
     Pdist = [0.0]
     Pr = [0.0]
     D = [0.0]
-    k = -1
+
     y_k, yref_k = 0.0, 0.0
     Kp, Ki, Kv = 0.0, 0.0, 0.0
     display_counter = 1000
 
     while not sim_termination:
-        k += 1
-        time.sleep(0.003)
-        # Plot current position of the machine
-        display_counter -= 1
-        if display_counter == 0:
-            display_counter = 1000
+        if pause_status:
+            continue
 
-            #print 'Drill_status, Hole_number,    Xdrill,       Ydrill,    Depth,     Feed Pressure'
-            #print drill_status, '         ', hole_counter, Xdrill[-1], Ydrill[-1], D[-1], W[-1]
+        time.sleep(0.00001)
+        # Plot current position of the machine
+        # display_counter -= 1
+        # if display_counter == 0:
+        #     display_counter = 1000
+        #     print 'Drill_status, Hole_number,    Xdrill,       Ydrill,    Depth,     Feed Pressure'
+        #     print drill_status, '         ', hole_counter, Xdrill[-1], Ydrill[-1], D[-1], W[-1]
 
         if drill_status == 'Not Started':
             Xdrill.append(Xdrill[-1])
@@ -140,7 +141,7 @@ def drill_simulation():
         elif drill_status == 'Moving':
             if movement_case == 0:
                 theta = math.atan2(Hole_location[hole_counter, 1] - Ydrill[-1],
-                                   Hole_location[hole_counter, 0] - Xdrill[k])
+                                   Hole_location[hole_counter, 0] - Xdrill[-1])
 
                 Xdrill.append(Xdrill[-1] + Vhaul * Ts * math.cos(theta))
                 Ydrill.append(Ydrill[-1] + Vhaul * Ts * math.sin(theta))
@@ -151,7 +152,7 @@ def drill_simulation():
             Pdist.append(0.0)  # Disturbance pressure
             Pr.append(0.0)  # RotationPressure, Page 243
             D.append(0.0)  # Depth
-            if np.linalg.norm(Hole_location[hole_counter, :] - [Xdrill[k + 1], Ydrill[k + 1]]) < proximity_measure:
+            if np.linalg.norm(Hole_location[hole_counter, :] - [Xdrill[-1], Ydrill[-1]]) < proximity_measure:
                 drill_status = 'Tramming'
                 tramming_counter = tramming_counter_init
 
@@ -296,7 +297,7 @@ def drill_simulation():
             Pr_kplus = 325 + Pdist_kplus + 1.8443 * N_kplus  # Page 243
 
             # Drill bit depth
-            D_kplus = D_k + K_depth * Ts * R_kplus * 8.46667/10000  # transform feet / hour to m / sec
+            D_kplus = D_k + K_depth * Ts * R_kplus * 8.46667/100000  # transform feet / hour to m / sec
 
             # ====
 
@@ -329,14 +330,14 @@ def drill_simulation():
                     hole_counter = hole_counter + 1
                     drill_status = 'Moving'
 
-        elif drill_status == 'Pause':
-            Xdrill.append(Xdrill[-1])
-            Ydrill.append(Ydrill[-1])
-            W.append(W[-1])
-            R.append(R[-1])
-            RN.append(RN[-1])
-            Pdist.append(Pdist[-1])
-            Pr.append(Pr[-1])
+        # elif drill_status == 'Pause':
+        #     Xdrill.append(Xdrill[-1])
+        #     Ydrill.append(Ydrill[-1])
+        #     W.append(W[-1])
+        #     R.append(R[-1])
+        #     RN.append(RN[-1])
+        #     Pdist.append(Pdist[-1])
+        #     Pr.append(Pr[-1])
 
     # plt.plot(D)
     # plt.show()
@@ -372,11 +373,21 @@ def gui_update():
     label_drill_val.after(100, gui_update)
 
 
+def pause():
+    global pause_status, button
+    pause_status = not pause_status
+    if pause_status:
+        button['text'] = 'Resume Simulation'
+    else:
+        button['text'] = 'Pause Simulation'
+
+
 if __name__ == '__main__':
     drill_status = ''
     hole_counter = 0
     Xdrill, Ydrill = [], []
     D, W = [], []
+    pause_status = False
     sim = threading.Thread(name='Drill Simulation', target=drill_simulation)
     sim.start()
 
@@ -408,6 +419,9 @@ if __name__ == '__main__':
     label_y_pos_val.grid(row=1, column=3)
     label_depth_val.grid(row=1, column=4)
     label_feed_val.grid(row=1, column=5)
+
+    button = Button(root, text='Pause Simulation', command=pause)
+    button.grid(row=2)
     gui_update()
     root.mainloop()
 
