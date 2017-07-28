@@ -7,10 +7,9 @@ import time
 
 
 def drill_simulation():
-    global drill_status, hole_counter, Xdrill, Ydrill, D, W, pause_status
+    global drill_status, hole_counter, Xdrill, Ydrill, D, W, pause_status, sim_factor
     movement_case = 0  # 0 for simulated movement, 1 for controlled movement
     # ======
-    Ndrills = 1
     # Parameters
     N_ref = 130  # Rotary speed set-point (RPM = rev/min)
     RN_set = 0.5  # penetration per rotation (inch/rev)
@@ -114,20 +113,13 @@ def drill_simulation():
 
     y_k, yref_k = 0.0, 0.0
     Kp, Ki, Kv = 0.0, 0.0, 0.0
-    display_counter = 1000
+    t_previous = time.time()
 
     while not sim_termination:
-        if pause_status:
+        if pause_status or (time.time()-t_previous < 0.0025/sim_factor):
             continue
 
-        time.sleep(0.00001)
-        # Plot current position of the machine
-        # display_counter -= 1
-        # if display_counter == 0:
-        #     display_counter = 1000
-        #     print 'Drill_status, Hole_number,    Xdrill,       Ydrill,    Depth,     Feed Pressure'
-        #     print drill_status, '         ', hole_counter, Xdrill[-1], Ydrill[-1], D[-1], W[-1]
-
+        # print time.time()-t_previous
         if drill_status == 'Not Started':
             Xdrill.append(Xdrill[-1])
             Ydrill.append(Ydrill[-1])
@@ -330,17 +322,7 @@ def drill_simulation():
                     hole_counter = hole_counter + 1
                     drill_status = 'Moving'
 
-        # elif drill_status == 'Pause':
-        #     Xdrill.append(Xdrill[-1])
-        #     Ydrill.append(Ydrill[-1])
-        #     W.append(W[-1])
-        #     R.append(R[-1])
-        #     RN.append(RN[-1])
-        #     Pdist.append(Pdist[-1])
-        #     Pr.append(Pr[-1])
-
-    # plt.plot(D)
-    # plt.show()
+        t_previous = time.time()
 
 
 def gui_tick():
@@ -364,13 +346,15 @@ def gui_tick():
 
 
 def gui_update():
+    global sim_factor
+    sim_factor = slider.get()
     label_drill_val['text'] = drill_status
     label_hole_val['text'] = str(hole_counter+1)
     label_x_pos_val['text'] = str(Xdrill[-1])
     label_y_pos_val['text'] = str(Ydrill[-1])
     label_depth_val['text'] = str(D[-1])[0:4]
     label_feed_val['text'] = str(W[-1])[0:5]
-    label_drill_val.after(100, gui_update)
+    label_drill_val.after(100, gui_update)           # 100 is the display delay
 
 
 def pause():
@@ -388,16 +372,16 @@ if __name__ == '__main__':
     Xdrill, Ydrill = [], []
     D, W = [], []
     pause_status = False
-    sim = threading.Thread(name='Drill Simulation', target=drill_simulation)
-    sim.start()
+    sim_factor = 1.00
+
 
     root = Tk()
-    label_drill = Label(root, text='Drill Status')
-    label_hole = Label(root, text='Hole Number')
-    label_x_pos = Label(root, text='X Pos')
-    label_y_pos = Label(root, text='Y Pos')
-    label_depth = Label(root, text='Depth')
-    label_feed = Label(root, text='Feed Pressure')
+    label_drill = Label(root, text='Drill Status', font=20)
+    label_hole = Label(root, text='Hole Number', font=20)
+    label_x_pos = Label(root, text='X Pos', font=20)
+    label_y_pos = Label(root, text='Y Pos', font=20)
+    label_depth = Label(root, text='Depth', font=20)
+    label_feed = Label(root, text='Feed Pressure', font=20)
 
     label_drill.grid(row=0, column=0)
     label_hole.grid(row=0, column=1)
@@ -406,12 +390,12 @@ if __name__ == '__main__':
     label_depth.grid(row=0, column=4)
     label_feed.grid(row=0, column=5)
 
-    label_drill_val = Label(root)
-    label_hole_val = Label(root)
-    label_x_pos_val = Label(root)
-    label_y_pos_val = Label(root)
-    label_depth_val = Label(root)
-    label_feed_val = Label(root)
+    label_drill_val = Label(root, font=20)
+    label_hole_val = Label(root, font=20)
+    label_x_pos_val = Label(root, font=20)
+    label_y_pos_val = Label(root, font=20)
+    label_depth_val = Label(root, font=20)
+    label_feed_val = Label(root, font=20)
 
     label_drill_val.grid(row=1, column=0)
     label_hole_val.grid(row=1, column=1)
@@ -420,8 +404,14 @@ if __name__ == '__main__':
     label_depth_val.grid(row=1, column=4)
     label_feed_val.grid(row=1, column=5)
 
-    button = Button(root, text='Pause Simulation', command=pause)
+    button = Button(root, text='Pause Simulation', command=pause, font=20)
     button.grid(row=2)
+    slider = Scale(root, from_=0.01, to=8, orient=HORIZONTAL, label='Simulation Speed x:',
+                   resolution=0.01)
+    slider.grid(row=2, column=2, rowspan=3)
+    slider.set(sim_factor)
+    sim = threading.Thread(name='Drill Simulation', target=drill_simulation)
+    sim.start()
     gui_update()
     root.mainloop()
 
