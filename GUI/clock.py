@@ -1,3 +1,4 @@
+# Code for clock
 from Tkinter import *
 import time
 
