@@ -4,10 +4,12 @@ import matplotlib.pyplot as plt
 from Tkinter import *
 import threading
 import time
-
+from pickle import dumps
+import socket
 
 def drill_simulation():
-    global drill_status, hole_counter, Xdrill, Ydrill, D, W, pause_status, sim_factor
+    global drill_status, hole_counter, Xdrill, Ydrill, D, W, pause_status
+    global sim_termination, t_elap, message
     movement_case = 0  # 0 for simulated movement, 1 for controlled movement
     # ======
     # Parameters
@@ -101,8 +103,9 @@ def drill_simulation():
     levelling_counter_init = 1200
 
     drill_status = 'Moving'  # moving to the next hole status
+    drill_status_number = 1
     sim_termination = False
-
+    
     # Initialization
     W = [0.0]
     R = [0.0]
@@ -114,12 +117,17 @@ def drill_simulation():
     y_k, yref_k = 0.0, 0.0
     Kp, Ki, Kv = 0.0, 0.0, 0.0
     t_previous = time.time()
-
+    t_0 = time.time()
+    s = 0.0
     while not sim_termination:
-        if pause_status or (time.time()-t_previous < 0.0025/sim_factor):
+        if pause_status or (time.time()-t_previous < 0.0025):
             continue
-
-        # print time.time()-t_previous
+        message = [drill_status_number, hole_counter+1, Xdrill[-1], Ydrill[-1], D[-1], W[-1], t_elap]
+        # print message
+        s = s + 0.0025
+        t_elap = time.time() - t_0
+        # print str(time.time()-t_previous)[0:8], str(t_elap)[0:8], s
+        t_previous = time.time()
         if drill_status == 'Not Started':
             Xdrill.append(Xdrill[-1])
             Ydrill.append(Ydrill[-1])
@@ -129,7 +137,8 @@ def drill_simulation():
             Pdist.append(0.0)  # Disturbance pressure
             Pr.append(0.0)  # RotationPressure, Page 243
             D.append(0.0)  # Depth
-
+            drill_status_number = 0
+            
         elif drill_status == 'Moving':
             if movement_case == 0:
                 theta = math.atan2(Hole_location[hole_counter, 1] - Ydrill[-1],
@@ -137,7 +146,7 @@ def drill_simulation():
 
                 Xdrill.append(Xdrill[-1] + Vhaul * Ts * math.cos(theta))
                 Ydrill.append(Ydrill[-1] + Vhaul * Ts * math.sin(theta))
-
+    
             W.append(0.0)  # Feed pressure
             R.append(0.0)  # Penetration rate in feet / hour
             RN.append(0.0)  # Penetration per revolotion in inch per revolution
@@ -146,6 +155,7 @@ def drill_simulation():
             D.append(0.0)  # Depth
             if np.linalg.norm(Hole_location[hole_counter, :] - [Xdrill[-1], Ydrill[-1]]) < proximity_measure:
                 drill_status = 'Tramming'
+                drill_status_number = 2
                 tramming_counter = tramming_counter_init
 
         elif drill_status == 'Tramming':
@@ -161,6 +171,7 @@ def drill_simulation():
             tramming_counter -= 1  # How many samples does it take
             if tramming_counter < 0:
                 drill_status = 'Levelling'
+                drill_status_number = 3
                 levelling_counter = levelling_counter_init
 
         elif drill_status == 'Levelling':
@@ -176,6 +187,7 @@ def drill_simulation():
             levelling_counter -= 1
             if levelling_counter < 0:
                 drill_status = 'Drilling'
+                drill_status_number = 4
                 W_hist = np.zeros((1, len_fad))
                 Wcom_hist = np.zeros((1, len_fad))
                 eold = RN_set
@@ -302,6 +314,7 @@ def drill_simulation():
 
             if D[-1] > desired_depth:
                 drill_status = 'Clearing'
+                drill_status_number = 5
 
         elif drill_status == 'Clearing':
             Xdrill.append(Xdrill[-1])
@@ -317,12 +330,29 @@ def drill_simulation():
             else:  # we need to move to the next hole, if any
                 if hole_counter == np.shape(Planned_hole_seq)[0] - 1:
                     drill_status = 'Not Started'
+                    drill_status_number = 0
                     sim_termination = 1
                 else:
                     hole_counter = hole_counter + 1
                     drill_status = 'Moving'
+                    drill_status_number = 1
 
-        t_previous = time.time()
+
+
+def transmit():
+    global sim_termination, message, pause_status
+    ip = "192.168.1.185"
+    port = 5005
+    sock = socket.socket(socket.AF_INET, # Internet
+                         socket.SOCK_DGRAM) # UDP
+    
+    while not sim_termination:
+        if pause_status:
+            continue
+        sock.sendto(dumps(message), (ip, port))
+    sock.sendto('Terminate', (ip, port))
+    return
+    
 
 
 def gui_tick():
@@ -346,42 +376,47 @@ def gui_tick():
 
 
 def gui_update():
-    global sim_factor
-    sim_factor = slider.get()
     label_drill_val['text'] = drill_status
     label_hole_val['text'] = str(hole_counter+1)
     label_x_pos_val['text'] = str(Xdrill[-1])
     label_y_pos_val['text'] = str(Ydrill[-1])
     label_depth_val['text'] = str(D[-1])[0:4]
     label_feed_val['text'] = str(W[-1])[0:5]
-    label_drill_val.after(100, gui_update)           # 100 is the display delay
+    label_time_val['text'] = str(t_elap)[0:5]
+    label_drill_val.after(1000, gui_update)           # 100 is the display delay
 
 
 def pause():
-    global pause_status, button
+    global pause_status, button_pause
     pause_status = not pause_status
     if pause_status:
-        button['text'] = 'Resume Simulation'
+        button_pause['text'] = 'Resume Simulation'
     else:
-        button['text'] = 'Pause Simulation'
+        button_pause['text'] = 'Pause Simulation'
 
+def end_sim():
+    global sim_termination
+    sim_termination = True
+    button_end['text'] = 'Simulation Terminated'
 
 if __name__ == '__main__':
     drill_status = ''
     hole_counter = 0
     Xdrill, Ydrill = [], []
     D, W = [], []
-    pause_status = False
+    pause_status, sim_termination = False, False
     sim_factor = 1.00
+    message = np.zeros(7)
 
-
+    t_elap = 0.0
     root = Tk()
     label_drill = Label(root, text='Drill Status', font=20)
-    label_hole = Label(root, text='Hole Number', font=20)
-    label_x_pos = Label(root, text='X Pos', font=20)
-    label_y_pos = Label(root, text='Y Pos', font=20)
+    label_hole = Label(root, text='Hole', font=20)
+    label_x_pos = Label(root, text='X', font=20)
+    label_y_pos = Label(root, text='Y', font=20)
     label_depth = Label(root, text='Depth', font=20)
-    label_feed = Label(root, text='Feed Pressure', font=20)
+    label_feed = Label(root, text='Feed ', font=20)
+    label_time = Label(root, text='Time ', font=20)
 
     label_drill.grid(row=0, column=0)
     label_hole.grid(row=0, column=1)
@@ -389,29 +424,34 @@ if __name__ == '__main__':
     label_y_pos.grid(row=0, column=3)
     label_depth.grid(row=0, column=4)
     label_feed.grid(row=0, column=5)
-
+    label_time.grid(row=0, column=6)
+    
     label_drill_val = Label(root, font=20)
     label_hole_val = Label(root, font=20)
     label_x_pos_val = Label(root, font=20)
     label_y_pos_val = Label(root, font=20)
     label_depth_val = Label(root, font=20)
     label_feed_val = Label(root, font=20)
-
+    label_time_val = Label(root, font=20)
+    
     label_drill_val.grid(row=1, column=0)
     label_hole_val.grid(row=1, column=1)
     label_x_pos_val.grid(row=1, column=2)
     label_y_pos_val.grid(row=1, column=3)
     label_depth_val.grid(row=1, column=4)
     label_feed_val.grid(row=1, column=5)
+    label_time_val.grid(row=1, column=6)
 
-    button = Button(root, text='Pause Simulation', command=pause, font=20)
-    button.grid(row=2)
-    slider = Scale(root, from_=0.01, to=8, orient=HORIZONTAL, label='Simulation Speed x:',
-                   resolution=0.01)
-    slider.grid(row=2, column=2, rowspan=3)
-    slider.set(sim_factor)
+    button_pause = Button(root, text='Pause Simulation', command=pause, font=20)
+    button_pause.grid(row=2, column = 0, columnspan=2)
+
+    button_end = Button(root, text='End Simulation', command= end_sim, font=20)
+    button_end.grid(row=2, column=5, columnspan=2)
+    
     sim = threading.Thread(name='Drill Simulation', target=drill_simulation)
     sim.start()
+    trans = threading.Thread(name='Socket', target=transmit)
+    trans.start()
     gui_update()
     root.mainloop()
 

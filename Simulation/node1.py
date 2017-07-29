@@ -41,13 +41,20 @@ y_trajectory_sample = np.zeros(int(n_sampling))
 k = 0
 
 
-for i in range(0, 10):
-    sock.sendto("Sample Frequency: " + str(sampling_frequency), (UDP_IP, UDP_PORT))
+for i in range(0, 1):
+    sock.sendto("Sample Frequency 1: " + str(sampling_frequency), (UDP_IP, UDP_PORT))
     time.sleep(0.05)
+
+# Check and wait to begin simulation
+instruction = False
+while not instruction:
+    if sock.recv(128) == "Begin":
+        instruction = True
+
 i = 0
 t_0 = time.time()
 count = 0
-while True:
+while instruction:
     if (time.time() - t_0 - 0.1) - t_array_sim[i]  > 0.000:
         x = A.dot(x) + B*u
         y = C.dot(x)
@@ -81,7 +88,7 @@ while True:
                 
         i = i + 1
 
-for i in range(0, 10):
+for i in range(0, 1):
     sock.sendto("Terminate", (UDP_IP, UDP_PORT))
     time.sleep(0.05)
 
