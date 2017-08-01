@@ -1,9 +1,10 @@
 import socket
 import time
-from pickle import loads
+import pickle
 from Tkinter import *
 import threading
 import numpy as np
+
 
 def transmission():
     global vector
@@ -17,21 +18,17 @@ def transmission():
     while time.time() - t_0 < 100:
         data, addr = sock.recvfrom(512)
         try:
-            vector = loads(data)
-        except:
-            print 'Error'
+            vector = pickle.loads(data)
+        except pickle.UnpicklingError:
+            print 'Error: ', data
 
 
 def gui_update():
     global vector
-    label_drill_val['text'] = str(drill_status_names[int(vector[0])])
-    label_hole_val['text'] = str(vector[1])
-    label_x_pos_val['text'] = str(vector[2])
-    label_y_pos_val['text'] = str(vector[3])
-    label_depth_val['text'] = str(vector[4])[0:4]
-    label_feed_val['text'] = str(vector[5])[0:5]
-    label_time_val['text'] = str(vector[6])[0:4]
-    label_drill_val.after(100, gui_update)
+    label_vals[0]['text'] = str(drill_status_names[int(vector[0])])
+    for k in xrange(1, 7):
+        label_vals[k]['text'] = str(vector[k])[0:5]
+    label_vals[0].after(100, gui_update)
 
 
 if __name__ == '__main__':
@@ -40,38 +37,16 @@ if __name__ == '__main__':
     receive.start()
 
     drill_status_names = ['Not Started,', 'Moving', 'Tramming', 'Levelling', 'Drilling', 'Clearing']
+    names = ['Drill Status', 'Hole Number', 'X Pos', 'Y Pos', 'Depth', 'Feed Pressure', 'Time Elapsed']
     root = Tk()
-    label_drill = Label(root, text='Drill Status', font=20)
-    label_hole = Label(root, text='Hole Number', font=20)
-    label_x_pos = Label(root, text='X Pos', font=20)
-    label_y_pos = Label(root, text='Y Pos', font=20)
-    label_depth = Label(root, text='Depth', font=20)
-    label_feed = Label(root, text='Feed Pressure', font=20)
-    label_time = Label(root, text='Time Elapsed', font=20)
+    label_names = []
+    label_vals = []
+    for i in xrange(7):
+        label_names.append(Label(root, text=names[i], font=20))
+        label_vals.append(Label(root, font=20))
 
-    label_drill.grid(row=0, column=0)
-    label_hole.grid(row=0, column=1)
-    label_x_pos.grid(row=0, column=2)
-    label_y_pos.grid(row=0, column=3)
-    label_depth.grid(row=0, column=4)
-    label_feed.grid(row=0, column=5)
-    label_time.grid(row=0, column=6)
-
-    label_drill_val = Label(root, font=20)
-    label_hole_val = Label(root, font=20)
-    label_x_pos_val = Label(root, font=20)
-    label_y_pos_val = Label(root, font=20)
-    label_depth_val = Label(root, font=20)
-    label_feed_val = Label(root, font=20)
-    label_time_val = Label(root, font=20)
-
-    label_drill_val.grid(row=1, column=0)
-    label_hole_val.grid(row=1, column=1)
-    label_x_pos_val.grid(row=1, column=2)
-    label_y_pos_val.grid(row=1, column=3)
-    label_depth_val.grid(row=1, column=4)
-    label_feed_val.grid(row=1, column=5)
-    label_time_val.grid(row=1, column=6)
+        label_names[i].grid(row=0, column=i)
+        label_vals[i].grid(row=1, column=i)
 
     gui_update()
     root.mainloop()
