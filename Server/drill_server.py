@@ -23,14 +23,13 @@ a = f.add_subplot(111)
 
 
 def sock_receive():
-    global plot_data
+    global plot_data_1 , plot_data_2
     ip = '192.168.1.185'
     port = 5005
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((ip, port))
     simulation = True
-
     while simulation:
         data, addr = sock.recvfrom(512)
         try:
@@ -40,12 +39,15 @@ def sock_receive():
                 print 'Terminating'
                 break
             continue
-        plot = np.array([[vector[6], vector[5]]])
-        plot_data = np.concatenate((plot_data, plot.T), axis=1)
+        plot = np.array([[vector[7], vector[6]]])
+        if vector[0] == 1:
+            plot_data_1 = np.concatenate((plot_data_1, plot.T), axis=1)
+        elif vector[0] == 2:
+            plot_data_2 = np.concatenate((plot_data_2, plot.T), axis=1)
 
 
 def animate(i):
-    global plot_data
+    global plot_data_1, plot_data_2
     # pullData = open("sampleText.txt", "r").read()
     # dataList = pullData.split('\n')
     # xList = []
@@ -57,7 +59,7 @@ def animate(i):
     #         yList.append(int(y))
 
     a.clear()
-    a.plot(plot_data[0, :], plot_data[1, :])
+    a.plot(plot_data_2[0, :], plot_data_2[1, :])
 
 
 class DrillGUI(tk.Tk):
@@ -155,8 +157,8 @@ class PageThree(tk.Frame):
         canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
 if __name__ == '__main__':
-    plot_data = np.zeros((2, 1))
-    print 'Plot data shape: ', np.shape(plot_data)
+    plot_data_1, plot_data_2 = np.zeros((2, 1)), np.zeros((2, 1))
+    print 'Plot data shape: ', np.shape(plot_data_1)
     receive = threading.Thread(name='Socket', target=sock_receive)
     receive.start()
     app = DrillGUI()
