@@ -1,3 +1,7 @@
+# Does the same thing as basic.py
+# But at the end of the 10 second simulation it clears the
+# simulation data and runs again
+# Run this code on RPi
 import numpy as np
 import matplotlib.pyplot as plt
 import socket
@@ -48,7 +52,7 @@ i = 0
 t_0 = time.time()
 count = 0
 while True:
-    if (time.time() - t_0 - 0.1) - t_array_sim[i]  > 0.000:
+    if (time.time() - t_0 - 0.1) - t_array_sim[i] > 0.000:
         x = A.dot(x) + B*u
         y = C.dot(x)
         x_trajectory_sim[:, i] = x

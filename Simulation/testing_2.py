@@ -1,11 +1,16 @@
 from Tkinter import *
 import Tkinter as tk
 import ttk
+# from ttk import *
+
 import tkFont
 
 
-class SampleApp(tk.Tk):
+# font  as tkfont # python 3
+# import Tkinter as tk     # python 2
+# import tkFont as tkfont  # python 2
 
+class SampleApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
@@ -15,6 +20,7 @@ class SampleApp(tk.Tk):
         # on top of each other, then the one we want visible
         # will be raised above the others
         container = tk.Frame(self)
+        # container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
         container.grid()
@@ -39,12 +45,11 @@ class SampleApp(tk.Tk):
 
 
 class StartPage(tk.Frame):
-
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         label = tk.Label(self, text="This is the start page", font=controller.title_font)
-        #label.pack(side="top", fill="x", pady=10)
+        # label.pack(side="top", fill="x", pady=10)
         label.grid()
         self.button = Button(self,
                              text="HOME", bg="gainsboro", command=lambda: controller.show_frame("PageOne"))
@@ -57,19 +62,22 @@ class StartPage(tk.Frame):
 
 
 class PageOne(tk.Frame):
-
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = tk.Label(self, text="This is page 1", font=controller.title_font)
-        #label.pack(side="top", fill="x", pady=10)
+        label = tk.Label(self, text="This is page Page One", font=controller.title_font)
+        # label.pack(side="top", fill="x", pady=10)
         label.grid()
-        button1 = tk.Button(self, text="Go to the start page",
-                           command=lambda: controller.show_frame("StartPage"))
-        button2 = tk.Button(self, text="Go to Status page",
-                           command=lambda: controller.show_frame("tab1"))
-        button1.grid()
-        button2.grid()
+        button_list = []
+        list_text_pages = ['StartPage', 'PageOne', 'PageTwo', 'tab1', 'Calibration', 'Levelling', 'Diagnostics',
+                           'Review']
+        button_names_list = ['Home', 'Session Information', 'Drilling', 'Status', 'Calibration', 'Levelling',
+                             'Diagnostics', 'Review']
+
+        for i in xrange(8):
+            button_list.append(tk.Button(self, text=str(button_names_list[i]),
+                                         command=lambda: controller.show_frame(list_text_pages[4])))
+            button_list[i].grid(row=6, column=i)
 
 
 class PageTwo(tk.Frame):
@@ -78,11 +86,11 @@ class PageTwo(tk.Frame):
         self.controller = controller
         label = tk.Label(self, text="This is page 2", font=controller.title_font)
         label.grid()
-        #label.pack(side="top", fill="x", pady=10)
+        # label.pack(side="top", fill="x", pady=10)
         button1 = tk.Button(self, text="Go to the start page",
-                           command=lambda: controller.show_frame("StartPage"))
+                            command=lambda: controller.show_frame("StartPage"))
         button2 = tk.Button(self, text="Go to the Status page",
-                           command=lambda: controller.show_frame("tab1"))
+                            command=lambda: controller.show_frame("tab1"))
         button1.grid()
         button2.grid()
 
@@ -118,46 +126,43 @@ class Levelling(tk.Frame):
 
 
 class Diagnostics(tk.Frame):
-
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = tk.Label(self, text="This is page 1", font=controller.title_font)
-        #label.pack(side="top", fill="x", pady=10)
+        label = tk.Label(self, text="Diagnostics", font=controller.title_font)
+        # label.pack(side="top", fill="x", pady=10)
         label.grid()
         button1 = tk.Button(self, text="Go to the start page",
-                           command=lambda: controller.show_frame("StartPage"))
+                            command=lambda: controller.show_frame("StartPage"))
         button2 = tk.Button(self, text="Go to Status page",
-                           command=lambda: controller.show_frame("tab1"))
+                            command=lambda: controller.show_frame("tab1"))
         button1.grid()
         button2.grid()
 
 
 class Review(tk.Frame):
-
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = tk.Label(self, text="This is page 1", font=controller.title_font)
-        #label.pack(side="top", fill="x", pady=10)
+        label = tk.Label(self, text="Review", font=controller.title_font)
+        # label.pack(side="top", fill="x", pady=10)
         label.grid()
         button1 = tk.Button(self, text="Go to the start page",
-                           command=lambda: controller.show_frame("StartPage"))
+                            command=lambda: controller.show_frame("StartPage"))
         button2 = tk.Button(self, text="Go to Status page",
-                           command=lambda: controller.show_frame("tab1"))
+                            command=lambda: controller.show_frame("tab1"))
         button1.grid()
         button2.grid()
 
 
 class tab1(tk.Frame):
-
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         self.grid()
 
         # frame 1 holds status label
-        Frame1 = tk.Frame(self, highlightbackground="black", highlightthickness=1)
+        Frame1 = tk.Frame(self, bg="white", highlightbackground="black", highlightthickness=1)
         Frame1.grid(row=0, column=0, rowspan=1, columnspan=5, sticky=W + E + N + S)
         # label for drilling stage
         self.label = Label(Frame1,
@@ -167,7 +172,7 @@ class tab1(tk.Frame):
         self.label.grid()
         # self.label.grid_propagate(0) #want to fit to frame size
 
-        Frame2 = Frame(self)
+        Frame2 = Frame(self, bg="blue")
         Frame2.grid(row=1, column=0, sticky=W + E)
         self.button = Button(Frame2,
                              text=" 1 ", bg="gainsboro", fg="black")
@@ -191,7 +196,7 @@ class tab1(tk.Frame):
 
         # self.button.grid_propagate(0)
 
-        Frame3 = Frame(self)
+        Frame3 = Frame(self, bg="white")
         Frame3.grid(row=1, column=1, columnspan=4, sticky=W + E + N + S)
 
         self.button = Button(Frame3,
@@ -213,34 +218,18 @@ class tab1(tk.Frame):
         mpb["maximum"] = 100
         mpb["value"] = 60  # write method for determining value
         # print "%s%%" % int(float(self.bytes) / float(self.maxbytes) * 100)
+
         self.label = Label(Frame3,
                            text="FORCE ON DRILL BIT (IN KN)")
         self.label.grid(row=3, column=1)
         self.label.config(font=("Courier", 7))
 
-        mpb = ttk.Progressbar(Frame3, orient="vertical", length=50, mode="determinate")
-        mpb.grid(row=4, column=0)
-        mpb["maximum"] = 100
-        mpb["value"] = 60  # write method for determining value
-        # print "%s%%" % int(float(self.bytes) / float(self.maxbytes) * 100)
-
         self.label = Label(Frame3,
-                           text="RETRACTION FORCE(IN KN)")
-        self.label.grid(row=4, column=1)
+                           text="FORCE ON DRILL BIT (IN KN)")
+        self.label.grid(row=3, column=1)
         self.label.config(font=("Courier", 7))
 
-        mpb = ttk.Progressbar(Frame3, orient="vertical", length=50, mode="determinate")
-        mpb.grid(row=5, column=0)
-        mpb["maximum"] = 100
-        mpb["value"] = 60  # write method for determining value
-        # print "%s%%" % int(float(self.bytes) / float(self.maxbytes) * 100)
-
-        self.label = Label(Frame3,
-                           text="RETRACTION RATE(IN Km/Hr)")
-        self.label.grid(row=5, column=1)
-        self.label.config(font=("Courier", 7))
-
-        Frame5 = Frame(self)
+        Frame5 = Frame(self, bg="gainsboro")
         Frame5.grid(row=0, column=5, rowspan=4, sticky=W + E)
 
         mpb = ttk.Progressbar(Frame5, orient="vertical", length=50, mode="determinate")
@@ -276,7 +265,7 @@ class tab1(tk.Frame):
         w = Entry(Frame5, bg="white", width=5)  # include command that updates value
         w.grid(row=2, column=2)
 
-        Frame6 = Frame(self)
+        Frame6 = Frame(self, bg="gainsboro")
         Frame6.grid(row=2, column=5, rowspan=4, sticky=N + W + E)
         self.label = Label(Frame6,
                            text="Remote Transmitter On")
@@ -294,44 +283,17 @@ class tab1(tk.Frame):
                            text="Water Level")
         self.label.grid(row=3, column=0, sticky=W)
 
-
         # Buttons for the different tabs
-        self.button = Button(self,
-                             text="HOME", bg="gainsboro", command=lambda: controller.show_frame("PageOne"))
+        self.button_list = []
+        self.list_text_pages = ['StartPage', 'PageOne', 'PageTwo', 'tab1',
+                                'Calibration', 'Levelling', 'Diagnostics', 'Review']
+        self.button_names_list = ['Home', 'Session Information', 'Drilling', 'Status',
+                                  'Calibration', 'Levelling', 'Diagnostics', 'Review']
 
-        self.button.grid(row=6, column=1, sticky=E + W)
+        for i in range(6):
+            self.button_list.append(tk.Button(self, text=str(self.button_names_list[i])))
+            self.button_list[i].grid(row=6, column=i)
 
-        self.button = Button(self,
-                             text="STOP", bg="red", fg="white",
-                             command=quit)
-        self.button.grid(row=6, column=0, sticky=E + W)
-
-        self.button = Button(self,
-                             text="SESSION INFO", bg="gainsboro", fg="black", command=lambda: controller.show_frame("PageTwo"))
-        self.button.grid(row=6, column=2, sticky=E + W)
-
-        self.button = Button(self,
-                             text="CALIBRATION", bg="gainsboro", fg="black", command=lambda: controller.show_frame("Calibration"))
-        self.button.grid(row=6, column=3, sticky=E + W)
-
-        self.button = Button(self,
-                             text="LEVELLING", bg="gainsboro", fg="black", command=lambda: controller.show_frame("Levelling"))
-
-        self.button.grid(row=6, column=4, sticky=E + W)
-
-        self.button = Button(self,
-                             text="STATUS", bg="gainsboro", fg="black", command=lambda: controller.show_frame("tab1"))
-        self.button.grid(row=6, column=5, sticky=E + W)
-
-        self.button = Button(self,
-                             text="DIAGNOSTICS", bg="gainsboro", fg="black", command=lambda: controller.show_frame("Diagnostics"))
-
-        self.button.grid(row=6, column=6, sticky=E + W)
-
-        self.button = Button(self,
-                             text="REVIEW", bg="gainsboro", fg="black", command=lambda: controller.show_frame("Review"))
-
-        self.button.grid(row=6, column=7, sticky=E + W)
 
 if __name__ == "__main__":
     app = SampleApp()

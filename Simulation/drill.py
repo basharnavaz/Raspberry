@@ -7,6 +7,7 @@ import time
 from pickle import dumps
 import socket
 
+
 def drill_simulation():
     global drill_status, hole_counter, Xdrill, Ydrill, D, W, pause_status
     global sim_termination, t_elap, message

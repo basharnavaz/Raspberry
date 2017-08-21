@@ -1,3 +1,7 @@
+# Node 2 for simulated data
+# Simulation runs for 40 seconds
+# it refreshes every 4 seconds
+
 import numpy as np
 import matplotlib.pyplot as plt
 import socket
@@ -48,7 +52,7 @@ i = 0
 t_0 = time.time()
 count = 0
 while True:
-    if (time.time() - t_0 - 0.1) - t_array_sim[i]  > 0.000:
+    if (time.time() - t_0 - 0.1) - t_array_sim[i] > 0.000:
         x = A.dot(x) + B*u
         y = C.dot(x)
         x_trajectory_sim[:, i] = x

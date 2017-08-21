@@ -4,14 +4,13 @@
 # Code to receive data from 2 Raspberry Pis and plot
 # data received in previous five seconds
 # When porting code pay attention to the IP address of the server
-#
-
-
+# This code works on the simulated system of equations
+# where the system follows
 
 
 import socket
 import time
-from pickle import loads
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -59,7 +58,7 @@ def animate(i):
     data, addr = sock.recvfrom(512)  # buffer size is 1024 bytes
 
     try:
-        x_received = loads(data)
+        x_received = pickle.loads(data)
         x_received = np.array([[x_received[0], x_received[1], x_received[2],
                                 x_received[3], x_received[4]]])
         # Node 1
@@ -94,7 +93,7 @@ def animate(i):
         ax.plot(x_node_1[0, :], x_node_1[1, :], x_node_2[0, :], x_node_2[1, :])
         ax.set_ylim([-2700, 9200])
 
-    except:
+    except:   # Should use pickle.RaiseError
         if data == "Terminate":
             print "End of Transmission"
             print "Number of Misses; Node 1:", miss_1, ",  Node 2:", miss_2

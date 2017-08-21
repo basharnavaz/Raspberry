@@ -1,3 +1,12 @@
+# Send data over socket
+# data is of a simple linear state space system
+# simulation runs for 10 seconds and sends the x coordinates and
+# the y coordinate along with the time
+# Plots graphs after teh simulation runs
+# The matrices are taken from the c2d function in MATLAB
+# Run this code on RPi
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 import socket
@@ -6,8 +15,8 @@ from pickle import loads, dumps
 
 UDP_IP = "192.168.1.185"
 UDP_PORT = 5005
-sock = socket.socket(socket.AF_INET, # Internet
-                     socket.SOCK_DGRAM) # UDP
+sock = socket.socket(socket.AF_INET,
+                     socket.SOCK_DGRAM)
 
 end_time = 10
 sim_frequency = 1000

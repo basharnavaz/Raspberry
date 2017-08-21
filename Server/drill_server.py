@@ -1,7 +1,7 @@
 # Author: Basharnavaz Khan
 #
 # This code is for live plotting of data being received from Raspberry Pi
-#
+# The data is of simulated drills
 import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure

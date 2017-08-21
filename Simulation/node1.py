@@ -1,3 +1,7 @@
+# Runs the same thing as basic.py but for node1
+# Simulation runs for 40 seconds and refreshes every 4 seconds
+# Run on Raspberry Pi
+
 import numpy as np
 import matplotlib.pyplot as plt
 import socket
